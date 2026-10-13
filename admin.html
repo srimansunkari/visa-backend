@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US Visa Scheduler - Admin Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f7f6; margin: 0; padding: 30px; color: #333; }
+        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h2, h3 { color: #007bff; margin-top: 0; }
+        .section { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        select, button { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; margin-top: 5px; }
+        button:hover { background: #0056b3; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #007bff; color: white; }
+        .btn-reset { background: #dc3545; padding: 5px 10px; font-size: 12px; width: auto; }
+        .btn-reset:hover { background: #c82333; }
+        .code-display { font-size: 22px; font-weight: bold; color: #28a745; margin-top: 5px; }
+        #result-box { margin-top: 15px; padding: 15px; background: #e9ecef; border-radius: 5px; display: none; }
+    </style>
+</head>
+<body onload="loadLicenses()">
+
+<div class="container">
+    <!-- Generator Section -->
+    <div class="section">
+        <h2>License Key Generator</h2>
+        <div class="form-group">
+            <label for="duration">Subscription Duration:</label>
+            <select id="duration">
+                <option value="7">7 Days</option>
+                <option value="30" selected>30 Days (1 Month)</option>
+                <option value="90">90 Days (3 Months)</option>
+                <option value="365">365 Days (1 Year)</option>
+            </select>
+        </div>
+        <button onclick="generateKey()">Generate New License Key</button>
+
+        <div id="result-box">
+            <div>Generated 8-Digit License Code:</div>
+            <div class="code-display" id="new-code">--------</div>
+            <div style="font-size: 12px; color: #666; margin-top: 5px;" id="expiry-info"></div>
+        </div>
+    </div>
+
+    <!-- License Management Table Section -->
+    <div>
+        <h3>All Generated Licenses</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Duration</th>
+                    <th>Device ID</th>
+                    <th>Expires At</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="license-table-body">
+                <tr><td colspan="5" style="text-align:center;">Loading licenses...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Configured with your live Render backend URL
+    const BACKEND_URL = 'https://visa-backend-1-kn1p.onrender.com';
+
+    async function generateKey() {
+        const durationDays = document.getElementById('duration').value;
+        const resultBox = document.getElementById('result-box');
+        const codeDisplay = document.getElementById('new-code');
+        const expiryInfo = document.getElementById('expiry-info');
+
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/generate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ duration_days: Number(durationDays) })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                codeDisplay.textContent = data.code;
+                expiryInfo.textContent = `Valid for ${data.duration_days} days upon first device activation.`;
+                resultBox.style.display = 'block';
+                loadLicenses(); // Refresh table
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (err) {
+            alert('Could not connect to cloud server. Note: Free Render servers spin down after inactivity, so the first request can take up to 30 seconds.');
+        }
+    }
+
+    async function loadLicenses() {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/licenses`);
+            const data = await response.json();
+            const tbody = document.getElementById('license-table-body');
+            
+            if (!data.success || data.licenses.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No license keys found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            data.licenses.forEach(lic => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight:bold; font-family:monospace;">${lic.code}</td>
+                    <td>${lic.duration_days} Days</td>
+                    <td style="color:${lic.device_id ? '#007bff' : '#888'};">${lic.device_id || 'Not Activated Yet'}</td>
+                    <td>${lic.expires_at ? new Date(lic.expires_at).toLocaleDateString() : 'N/A'}</td>
+                    <td>${lic.device_id ? `<button class="btn-reset" onclick="resetDevice('${lic.code}')">Reset Device</button>` : 'Unused'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (err) {
+            console.error('Failed to load licenses', err);
+        }
+    }
+
+    async function resetDevice(code) {
+        if (!confirm(`Are you sure you want to reset the device binding for key ${code}?`)) return;
+
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/reset-device`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: code })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert('Device reset successful!');
+                loadLicenses();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (err) {
+            alert('Could not connect to cloud server.');
+        }
+    }
+</script>
+
+</body>
+</html>
