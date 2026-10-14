@@ -3,75 +3,128 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VisaSlot Pro V16.1 — Automated US Visa Slot Booking</title>
-  <!-- Load Official Razorpay Checkout Script for Automated UPI/QR -->
+  <title>VisaSlot Pro — Automated US Visa Slot Booking</title>
+  <!-- Load Official Razorpay Checkout Script -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
-    .container { max-width: 800px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; flex: 1; width: 100%; box-sizing: border-box; }
-    h1 { color: #2c3e50; margin-bottom: 10px; }
-    p.subtitle { color: #7f8c8d; font-size: 16px; margin-bottom: 30px; }
-    .plans { display: flex; gap: 20px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap; }
-    .plan-card { background: #fafafa; border: 2px solid #e0e0e0; border-radius: 8px; padding: 20px; width: 220px; text-align: center; transition: 0.3s; }
-    .plan-card:hover { border-color: #3498db; transform: translateY(-3px); }
-    .plan-card h3 { margin: 0 0 10px; color: #2c3e50; }
-    .price { font-size: 24px; font-weight: bold; color: #e74c3c; margin-bottom: 15px; }
-    button.buy-btn { background: #27ae60; color: #fff; border: none; padding: 10px 15px; font-size: 14px; font-weight: bold; border-radius: 5px; cursor: pointer; width: 100%; }
-    button.buy-btn:hover { background: #219653; }
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --success: #16a34a;
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+    }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); display: flex; flex-direction: column; min-height: 100vh; box-sizing: border-box; }
+    .container { max-width: 850px; margin: 20px auto; background: var(--card-bg); padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); flex: 1; width: 100%; box-sizing: border-box; border: 1px solid var(--border); }
     
-    #result-box { display: none; margin-top: 25px; padding: 20px; background: #e8f8f5; border: 1px solid #2ecc71; border-radius: 6px; text-align: left; }
-    #code-display { font-size: 28px; font-weight: bold; letter-spacing: 3px; color: #27ae60; margin: 10px 0; font-family: monospace; text-align: center; }
+    h1 { color: #fff; margin-bottom: 8px; font-size: 28px; letter-spacing: -0.5px; }
+    p.subtitle { color: var(--text-muted); font-size: 16px; margin-bottom: 35px; line-height: 1.5; }
 
-    /* Footer & Modal Policy Styles required by Razorpay */
-    footer { text-align: center; padding: 20px; background: #2c3e50; color: #fff; margin-top: auto; font-size: 13px; }
-    footer a { color: #3498db; margin: 0 10px; text-decoration: none; cursor: pointer; }
+    /* Steps & Guide Sections */
+    .section-title { font-size: 18px; color: #fff; margin-bottom: 15px; border-left: 4px solid var(--primary); padding-left: 10px; text-align: left; }
+    .grid-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 15px; margin-bottom: 35px; }
+    .step-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 20px; border-radius: 8px; text-align: left; }
+    .step-card h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 15px; }
+    .step-card p { margin: 0; font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+
+    /* Single Pricing Card */
+    .pricing-wrapper { display: flex; justify-content: center; margin-bottom: 35px; }
+    .plan-card { background: rgba(37, 99, 235, 0.05); border: 2px solid var(--primary); border-radius: 10px; padding: 25px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 4px 12px rgba(37,99,235,0.1); }
+    .plan-card h3 { margin: 0 0 5px; color: #fff; font-size: 20px; }
+    .plan-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 15px; }
+    .price { font-size: 32px; font-weight: bold; color: #f8fafc; margin-bottom: 20px; }
+    button.buy-btn { background: var(--success); color: #fff; border: none; padding: 12px 20px; font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; transition: background 0.2s; }
+    button.buy-btn:hover { background: #15803d; }
+
+    .download-link-btn { display: inline-block; background: var(--primary); color: #fff; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 6px; font-size: 14px; margin-bottom: 15px; transition: background 0.2s; }
+    .download-link-btn:hover { background: var(--primary-dark); }
+
+    /* Success Result Box */
+    #result-box { display: none; margin-top: 25px; padding: 25px; background: rgba(22, 163, 74, 0.1); border: 1px solid var(--success); border-radius: 8px; text-align: left; }
+    #code-display { font-size: 28px; font-weight: bold; letter-spacing: 3px; color: #4ade80; margin: 10px 0; font-family: monospace; text-align: center; }
+
+    /* Footer & Modals */
+    footer { text-align: center; padding: 20px; color: var(--text-muted); margin-top: auto; font-size: 13px; border-top: 1px solid var(--border); }
+    footer a { color: var(--primary); margin: 0 10px; text-decoration: none; cursor: pointer; }
     footer a:hover { text-decoration: underline; }
     
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
-    .modal-content { background: #fff; margin: 10% auto; padding: 30px; width: 80%; max-width: 600px; border-radius: 8px; text-align: left; max-height: 70vh; overflow-y: auto; color: #333; position: relative; }
-    .close-btn { position: absolute; right: 20px; top: 15px; font-size: 24px; font-weight: bold; cursor: pointer; color: #aaa; }
-    .close-btn:hover { color: #000; }
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); }
+    .modal-content { background: var(--card-bg); margin: 10% auto; padding: 30px; width: 80%; max-width: 600px; border-radius: 8px; text-align: left; max-height: 70vh; overflow-y: auto; color: var(--text); border: 1px solid var(--border); position: relative; }
+    .close-btn { position: absolute; right: 20px; top: 15px; font-size: 24px; font-weight: bold; cursor: pointer; color: var(--text-muted); }
+    .close-btn:hover { color: #fff; }
   </style>
 </head>
 <body>
 
   <div class="container">
     <h1>VisaSlot Pro V16.1</h1>
-    <p class="subtitle">The ultimate automated browser extension for US Visa OFC schedule tracking and booking.</p>
+    <p class="subtitle">The ultimate automated browser extension designed for fast US Visa OFC schedule tracking and booking.</p>
 
-    <div class="plans">
-      <!-- 30-Day Plan -->
+    <!-- 3 Steps Workflow -->
+    <div class="section-title">How It Works</div>
+    <div class="grid-steps">
+      <div class="step-card">
+        <h4>1. Download Extension</h4>
+        <p>Get our official extension package and add it directly to your Google Chrome browser.</p>
+      </div>
+      <div class="step-card">
+        <h4>2. Secure Payment</h4>
+        <p>Complete a fast automated UPI/QR checkout to generate your instant software license key.</p>
+      </div>
+      <div class="step-card">
+        <h4>3. Paste & Run</h4>
+        <p>Input your 8-digit activation code inside the extension panel to launch automated tracking.</p>
+      </div>
+    </div>
+
+    <!-- Download Action -->
+    <div style="text-align: center; margin-bottom: 30px;">
+      <a href="YOUR_CHROME_WEB_STORE_URL_HERE" target="_blank" class="download-link-btn">
+        📥 Download Extension from Chrome Web Store
+      </a>
+    </div>
+
+    <!-- How to Use Guide -->
+    <div class="section-title">Extension User Guide</div>
+    <div class="grid-steps" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 35px;">
+      <div class="step-card">
+        <h4>Step 1</h4>
+        <p>Log in securely to your official US Visa scheduling portal account.</p>
+      </div>
+      <div class="step-card">
+        <h4>Step 2</h4>
+        <p>Open the appointment schedule page or open schedule selection in a fresh tab.</p>
+      </div>
+      <div class="step-card">
+        <h4>Step 3</h4>
+        <p>Paste your purchased 8-digit activation code into the extension panel to run automation.</p>
+      </div>
+    </div>
+
+    <!-- Single 30-Day Plan -->
+    <div class="section-title" style="text-align: center; border-left: none;">License Plan</div>
+    <div class="pricing-wrapper">
       <div class="plan-card">
         <h3>30-Day Pass</h3>
+        <div class="plan-desc">Full access to automated slot tracking & booking tools</div>
         <div class="price">₹2,199</div>
         <button class="buy-btn" onclick="startUPIPayment(30, 2199)">Pay via UPI / QR</button>
-      </div>
-
-      <!-- 60-Day Plan -->
-      <div class="plan-card">
-        <h3>60-Day Pass</h3>
-        <div class="price">₹3,999</div>
-        <button class="buy-btn" onclick="startUPIPayment(60, 3999)">Pay via UPI / QR</button>
-      </div>
-
-      <!-- 90-Day Plan -->
-      <div class="plan-card">
-        <h3>90-Day Pass</h3>
-        <div class="price">₹5,199</div>
-        <button class="buy-btn" onclick="startUPIPayment(90, 5199)">Pay via UPI / QR</button>
       </div>
     </div>
 
     <!-- Success Code Output Box -->
     <div id="result-box">
-      <h3 style="text-align:center;">Payment Successful! 🎉</h3>
-      <p style="text-align:center;">Here is your instant 8-digit activation code for the extension:</p>
+      <h3 style="text-align:center; color:#4ade80; margin-top:0;">Payment Successful! 🎉</h3>
+      <p style="text-align:center; margin-bottom: 5px;">Here is your instant 8-digit activation code for the extension:</p>
       <div id="code-display">--------</div>
-      <p style="font-size: 13px; color: #555; text-align:center;">Copy this code and paste it into your extension panel to start running.</p>
+      <p style="font-size: 13px; color: var(--text-muted); text-align:center; margin-bottom:0;">Copy this code and paste it into your extension panel to start running.</p>
     </div>
   </div>
 
-  <!-- Mandatory Razorpay Policy Footer Links -->
+  <!-- Mandatory Policy Footer -->
   <footer>
     <p>&copy; 2026 VisaSlot Pro. All rights reserved.</p>
     <div>
@@ -96,7 +149,7 @@
 
     function startUPIPayment(days, priceInINR) {
       var options = {
-        "key": "rzp_test_YOUR_KEY_ID", 
+        "key": "rzp_live_TnJ3swX4n6RJ7L", 
         "amount": priceInINR * 100, 
         "currency": "INR",
         "name": "VisaSlot Pro",
@@ -114,7 +167,7 @@
           "plan_duration": days
         },
         "theme": {
-          "color": "#27ae60"
+          "color": "#2563eb"
         }
       };
 
@@ -146,7 +199,6 @@
       }
     }
 
-    // Modal Content Handler for Razorpay Reviewers
     const policies = {
       terms: "<h2>Terms & Conditions</h2><p>By purchasing and using VisaSlot Pro V16.1, you agree to comply with our terms. Our extension is designed to assist with US Visa OFC schedule tracking. Users are solely responsible for compliance with official platform guidelines.</p>",
       privacy: "<h2>Privacy Policy</h2><p>We respect your privacy. We collect minimal information required to process payments and verify active software licenses. We do not store or share sensitive personal credentials.</p>",
